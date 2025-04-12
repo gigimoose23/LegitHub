@@ -695,6 +695,12 @@ workspace.GameInfo.HoardbatsActive:GetPropertyChangedSignal("Value"):Connect(fun
     end
 end)
 
+workspace.GameInfo.LureActive:GetPropertyChangedSignal("Value"):Connect(function()
+    if workspace.GameInfo.LureActive.Value == true then
+        Library:Notify('Onslaught has spawned')
+    end
+end)
+
 local MenuGroup = Tabs["UI Settings"]:AddLeftGroupbox("Menu")
 
 MenuGroup:AddToggle("KeybindMenuOpen", {
