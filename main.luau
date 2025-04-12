@@ -25,6 +25,7 @@ local espCategories = {
 local LocalPlayer = Players.LocalPlayer
 local mouse = LocalPlayer:GetMouse()
 
+
 local FLYING = false
 local QEfly = true
 local iyflyspeed = 1
@@ -35,7 +36,8 @@ local flyKeyDown, flyKeyUp
 local function getRoot(char)
 	return char:FindFirstChild("HumanoidRootPart")
 end
-
+local TargetSpeed = 10
+local SPEED = 0
 function sFLY(vfly)
 	repeat task.wait() until LocalPlayer and LocalPlayer.Character and getRoot(LocalPlayer.Character) and LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
 
@@ -46,7 +48,7 @@ function sFLY(vfly)
 	local root = getRoot(character)
 	local CONTROL = {F = 0, B = 0, L = 0, R = 0, Q = 0, E = 0}
 	local lCONTROL = {F = 0, B = 0, L = 0, R = 0, Q = 0, E = 0}
-	local SPEED = 0
+	
 
 	local function FLY()
 		FLYING = true
@@ -71,7 +73,7 @@ function sFLY(vfly)
 					((camCF * CFrame.new(CONTROL.L + CONTROL.R, (CONTROL.Q + CONTROL.E) * 0.2, 0)).Position - camCF.Position)
 
 				if moveVec.Magnitude > 0 then
-					SPEED = 50
+					SPEED = TargetSpeed
 					BV.Velocity = moveVec.Unit * SPEED
 					lCONTROL = {F = CONTROL.F, B = CONTROL.B, L = CONTROL.L, R = CONTROL.R, Q = CONTROL.Q, E = CONTROL.E}
 				else
@@ -318,14 +320,13 @@ LeftGroupBox:AddSlider("WSSlider", {
 LeftGroupBox:AddSlider("FSpeed", {
 	Text = "Fly Speed",
 	Default = 16,
-	Min = 5,
-	Max = 100,
+	Min = 10,
+	Max = 300,
 	Rounding = 1,
 	Compact = true,
 
 	Callback = function(Value)
-		FlySpeed = Value
-        iyflyspeed = Value
+		TargetSpeed = Value
 	end,
 
 	Disabled = false, 
@@ -397,6 +398,21 @@ RightGroupBox:AddButton({
 	Text = "Play Again",
 	Func = function()
 		RepStorage.Events.PlayerActions.PlayAgain:FireServer()
+	end,
+	DoubleClick = true,
+
+	Disabled = false,
+	Visible = true,
+})
+RightGroupBox:AddButton({
+	Text = "Reset",
+	Func = function()
+		RepStorage.Events.EntityEvents.DamageFromClient:FireServer({
+            AttackedBy = "Legit Hub", 
+            IsSet = true, 
+            IgnoresHide = false, 
+            Damage = 0
+        })
 	end,
 	DoubleClick = true,
 
@@ -511,7 +527,7 @@ LeftGroupBox:AddToggle("ESPTracers", {
 
 	Default = true,
 	Disabled = false, 
-	Visible = true, 
+	Visible = false, 
 
 	Callback = function(Value)
 		ESPTracersEnabled = Value
@@ -590,7 +606,7 @@ task.spawn(function()
                 AttackedBy = "Blacklight", 
                 IsSet = true, 
                 IgnoresHide = false, 
-                Damage = -math.huge
+                Damage = math.huge
             })
         end
     end
@@ -808,7 +824,7 @@ local function processRoom(room)
                     table.insert(roomSpecESPs, addESP(object, 'Terminal', 'Objectives'))
                 elseif object.Name == 'Switch' and not object:FindFirstAncestor('Switch') then
                     table.insert(roomSpecESPs, addESP(object, 'Fuse', 'Objectives'))
-                elseif object.Name == 'GivingCoins' and object:FindFirstAncestor('CoinStack') then
+                elseif object.Name == 'GivingCoins' then
                     table.insert(roomSpecESPs, addESP(object, 'Coins', 'Coins'))
                 elseif object.Name == 'Minigame' and object:FindFirstChild('Switches') then
                     table.insert(roomSpecESPs, addESP(object, 'Breaker Minigame', 'Objectives'))
