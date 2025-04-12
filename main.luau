@@ -277,7 +277,7 @@ LeftGroupBox:AddToggle("Noclip", {
 		        Noclipping:Disconnect()
 	        end
             for _, child in pairs(Players.LocalPlayer.Character:GetDescendants()) do
-		    	if child:IsA("BasePart") and child.CanCollide == false then
+		    	if child:IsA("BasePart") and child.CanCollide == false and child.Name ~= "Head" then
 		    		child.CanCollide = true
 		    	end
 		    end
@@ -503,7 +503,7 @@ task.spawn(function()
         end
     end
 end)
-local NotifyEntities = {"Rush", "Screech", "Ram", "Ambush", "Hoardbats", "Eyes", "Stare"}
+local NotifyEntities = {"Rush", "Screech", "Ram", "Ambush", "Hoardbats", "Eyes", "Stare", "Onslaught"}
 local NotifyEntitiesInternal = {}
 local RightGroupBox = Tabs.Visuals:AddRightGroupbox("<b>Notifications</b>")
 for _, Entity in NotifyEntities do
@@ -576,14 +576,16 @@ LeftGroupBox:AddToggle("PartialGod", {
 	end,
 })
 local AutoCage = false
+local DoConLoop = false
 LeftGroupBox:AddToggle("AutoCage", {
 	Text = "Auto Escape Watcher-cage",
 
 	Default = true,
 	Disabled = false, 
-	Visible = true, 
+	Visible = false, 
 
 	Callback = function(Value)
+        DoConLoop = Value
         if Value then
             for _, Connection in getconnections(RepStorage.Events.ThePrision.PlayerCaged.OnClientEvent) do
                 Connection:Disable()
@@ -595,8 +597,24 @@ LeftGroupBox:AddToggle("AutoCage", {
         end
 	end,
 })
+
+task.spawn(function()
+    while wait() do
+        if DoConLoop then
+            for _, Connection in getconnections(RepStorage.Events.ThePrision.PlayerCaged.OnClientEvent) do
+                Connection:Disable()
+            end
+        else
+            for _, Connection in getconnections(RepStorage.Events.ThePrision.PlayerCaged.OnClientEvent) do
+                Connection:Enable()
+            end
+        end
+    end
+end)
+
 RepStorage.Events.ThePrision.PlayerCaged.OnClientEvent:Connect(function()
     if not AutoCage then return end
+    task.wait(4)
     RepStorage.Events.ThePrision.MinigameFinished:FireServer()
 end)
 task.spawn(function()
@@ -612,7 +630,7 @@ task.spawn(function()
     end
 end)
 local RightGroupBox = Tabs.Exploits:AddRightGroupbox("<b>Anti-Entity</b>")
-local AntiEntity = {"Blacklight", "Screech", "Void", "Watcher"}
+local AntiEntity = {"Blacklight", "Screech", "Void", "Seek-Locker"}
 local AntiEntityInternal = {}
 for _, Entity in AntiEntity do
     AntiEntityInternal[Entity] = false
@@ -627,10 +645,23 @@ for _, Entity in AntiEntity do
             if Entity == "Screech" and Value == false and ClientMain then
                 ClientMain.CLIENT.Values.ScreechActive.Value = false
             end
+            if Entity == "Seek-Locker" and Value == false then
+                for _, Obj in workspace:GetDescendants() do
+                    if Obj.Name == "AttackRange" then
+                        Obj.CanTouch = true
+                    end
+                end
+            end
 		   AntiEntityInternal[Entity] = Value
 	    end,
     })
 end
+
+workspace.DescendantAdded:Connect(function(Obj)
+    if Obj.Name == "AttackRange" and AntiEntityInternal["Seek-Locker"] then
+        Obj.CanTouch = false
+    end
+end)
 
 task.spawn(function()
     while wait() do
@@ -690,13 +721,13 @@ workspace.DescendantAdded:Connect(function(Object)
 end)
 
 workspace.GameInfo.HoardbatsActive:GetPropertyChangedSignal("Value"):Connect(function()
-    if workspace.GameInfo.HoardbatsActive.Value == true then
+    if workspace.GameInfo.HoardbatsActive.Value == true and NotifyEntitiesInternal["Hoardbats"] then
         Library:Notify('Hoardbats Swarm has spawned')
     end
 end)
 
 workspace.GameInfo.LureActive:GetPropertyChangedSignal("Value"):Connect(function()
-    if workspace.GameInfo.LureActive.Value == true then
+    if workspace.GameInfo.LureActive.Value == true and NotifyEntitiesInternal["Onslaught"]then
         Library:Notify('Onslaught has spawned')
     end
 end)
@@ -831,7 +862,7 @@ local function processRoom(room)
                 elseif object.Name == 'Switch' and not object:FindFirstAncestor('Switch') then
                     table.insert(roomSpecESPs, addESP(object, 'Fuse', 'Objectives'))
                 elseif object.Name == 'GivingCoins' then
-                    table.insert(roomSpecESPs, addESP(object, 'Coins', 'Coins'))
+                    table.insert(roomSpecESPs, addESP(object.Parent, 'Coins', 'Coins'))
                 elseif object.Name == 'Minigame' and object:FindFirstChild('Switches') then
                     table.insert(roomSpecESPs, addESP(object, 'Breaker Minigame', 'Objectives'))
                 elseif object.Name == 'ObservatoryKey' then
@@ -902,7 +933,7 @@ local function processObject(object)
     if object:FindFirstAncestor('Game Configuration') then return end
 
     if espCategories.Entity then
-        if object.Name == 'HoardbatClient' then
+        if object.Name == 'HoardbatClient' or object.Name == "HoardBat" then
             addESP(object, 'Hoardbat', 'Entity')
         elseif object.Name == 'Eyes' and not object.Parent.Name == 'Bob' then
             addESP(object, 'Eyes', 'Entity')
