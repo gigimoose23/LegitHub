@@ -630,7 +630,7 @@ task.spawn(function()
     end
 end)
 local RightGroupBox = Tabs.Exploits:AddRightGroupbox("<b>Anti-Entity</b>")
-local AntiEntity = {"Blacklight", "Screech", "Void", "Seek-Locker"}
+local AntiEntity = {"Blacklight", "Screech", "Void", "Seek-Locker", "Figure-Hearing"}
 local AntiEntityInternal = {}
 for _, Entity in AntiEntity do
     AntiEntityInternal[Entity] = false
@@ -657,6 +657,8 @@ for _, Entity in AntiEntity do
     })
 end
 
+
+
 workspace.DescendantAdded:Connect(function(Obj)
     if Obj.Name == "AttackRange" and AntiEntityInternal["Seek-Locker"] then
         Obj.CanTouch = false
@@ -668,6 +670,9 @@ task.spawn(function()
         if AntiEntityInternal["Screech"] then
             ClientMain.CLIENT.Values.ScreechActive.Value = true
         end
+	if AntiEntityInternal["Watcher"] then
+	    RepStorage:WaitForChild("Events"):WaitForChild("PlayerCrouching"):FireServer(true)
+	end
     end
 end)
 
