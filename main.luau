@@ -11,6 +11,7 @@ Players.LocalPlayer.PlayerGui.DescendantAdded:Connect(function(Object)
         ClientMain = Object
     end
 end)
+local AntiEntityInternal = {}
 local FPLoop = false
 local CageDone
 local FlySpeed
@@ -349,39 +350,7 @@ task.spawn(function()
         end
     end
 end)
-local InstaRact = false
-LeftGroupBox:AddToggle("InstantInteract", {
-	Text = "Instant Interact",
 
-	Default = false,
-	Disabled = false, 
-	Visible = true, 
-
-	Callback = function(Value)
-		InstaRact = Value
-        if Value == false then
-            for _, Prompt in workspace:GetDescendants() do
-                if Prompt:IsA("ProximityPrompt") and Prompt:GetAttribute("OrigHold") ~= nil then
-                    Prompt.HoldDuration = Prompt:GetAttribute("OrigHold")
-                end
-            end
-        elseif Value == true then
-            for _, Prompt in workspace:GetDescendants() do
-                if Prompt:IsA("ProximityPrompt") then
-                    Prompt:SetAttribute("OrigHold", Prompt.HoldDuration)
-                    Prompt.HoldDuration = 0
-                end
-            end
-        end
-	end,
-})
-
-workspace.DescendantAdded:Connect(function(Prompt)
-    if Prompt:IsA("ProximityPrompt") and InstaRact then
-        Prompt:SetAttribute("OrigHold", Prompt.HoldDuration)
-        Prompt.HoldDuration = 0
-    end
-end)
 
 local RightGroupBox = Tabs.Main:AddRightGroupbox("<b>Quick Buttons</b>")
 RightGroupBox:AddButton({
@@ -419,6 +388,260 @@ RightGroupBox:AddButton({
 	Disabled = false,
 	Visible = true,
 })
+
+local LeftGroupBox = Tabs.Main:AddLeftGroupbox("<b>Prompts</b>")
+local InstaRact = false
+LeftGroupBox:AddToggle("InstantInteract", {
+	Text = "Instant Interact",
+
+	Default = false,
+	Disabled = false, 
+	Visible = true, 
+
+	Callback = function(Value)
+		InstaRact = Value
+        if Value == false then
+            for _, Prompt in workspace:GetDescendants() do
+                if Prompt:IsA("ProximityPrompt") and Prompt:GetAttribute("OrigHold") ~= nil then
+                    Prompt.HoldDuration = Prompt:GetAttribute("OrigHold")
+                end
+            end
+        elseif Value == true then
+            for _, Prompt in workspace:GetDescendants() do
+                if Prompt:IsA("ProximityPrompt") then
+                    Prompt:SetAttribute("OrigHold", Prompt.HoldDuration)
+                    Prompt.HoldDuration = 0
+                end
+            end
+        end
+	end,
+})
+
+workspace.DescendantAdded:Connect(function(Prompt)
+    if Prompt:IsA("ProximityPrompt") and InstaRact then
+        Prompt:SetAttribute("OrigHold", Prompt.HoldDuration)
+        Prompt.HoldDuration = 0
+    end
+end)
+local PM = 1
+local PR = false
+LeftGroupBox:AddToggle("PromptReach", {
+	Text = "Prompt Reach",
+
+	Default = false,
+	Disabled = false, 
+	Visible = true, 
+
+	Callback = function(Value)
+		PR = Value
+        if Value == false then
+            for _, Prompt in workspace:GetDescendants() do
+                if Prompt:IsA("ProximityPrompt") and Prompt:GetAttribute("OrigHold") ~= nil then
+                    Prompt.RequiresLineOfSight = Prompt:GetAttribute("OrigLOSReq")
+                    Prompt.MaxActivationDistance = Prompt:GetAttribute("OrigMAD")
+                end
+            end
+        elseif Value == true then
+            for _, Prompt in workspace:GetDescendants() do
+                if Prompt:IsA("ProximityPrompt") then
+                   Prompt:SetAttribute("OrigLOSReq", Prompt.RequiresLineOfSight)
+                    Prompt:SetAttribute("OrigMAD", Prompt.MaxActivationDistance)
+                    Prompt.RequiresLineOfSight = false
+                    Prompt.MaxActivationDistance = Prompt.MaxActivationDistance * PM
+                end
+            end
+        end
+	end,
+})
+LeftGroupBox:AddSlider("PM", {
+	Text = "Prompt Reach Multiplier",
+	Default = PM,
+	Min = 1,
+	Max = 1.4,
+	Rounding = 1,
+	Compact = true,
+
+	Callback = function(Value)
+		PM = Value
+        if PR then
+             for _, Prompt in workspace:GetDescendants() do
+                if Prompt:IsA("ProximityPrompt") then
+                   Prompt:SetAttribute("OrigLOSReq", Prompt.RequiresLineOfSight)
+                    Prompt:SetAttribute("OrigMAD", Prompt.MaxActivationDistance)
+                    Prompt.RequiresLineOfSight = false
+                    Prompt.MaxActivationDistance = Prompt.MaxActivationDistance * PM
+                end
+            end
+        end
+	end,
+
+	Disabled = false, 
+	Visible = true, 
+})
+workspace.DescendantAdded:Connect(function(Prompt)
+    if Prompt:IsA("ProximityPrompt") and PR then
+        Prompt:SetAttribute("OrigLOSReq", Prompt.RequiresLineOfSight)
+        Prompt:SetAttribute("OrigMAD", Prompt.MaxActivationDistance)
+        Prompt.RequiresLineOfSight = false
+        Prompt.MaxActivationDistance = Prompt.MaxActivationDistance * PM
+    end
+end)
+local RightGroupBox = Tabs.Main:AddLeftGroupbox("<b>Auto-Rooms</b>")
+local ARTargetReach = 205
+RightGroupBox:AddSlider("ARRoomReach", {
+	Text = "Room to Reach",
+	Default = ARTargetReach,
+	Min = 102,
+	Max = 205,
+	Rounding = 0,
+	Compact = true,
+
+	Callback = function(Value)
+		
+	end,
+
+	Disabled = false, 
+	Visible = true, 
+})
+local CollectionService = game:GetService("CollectionService")
+local Rooms = workspace.GeneratedRooms
+local ARGoing = false
+local FiredPrompts = {}
+local DoggedRooms = {}
+local CutFolder = Instance.new("Folder")
+local ARCon
+RightGroupBox:AddButton({
+	Text = "Start/Stop",
+	Func = function()
+        ARGoing = not ARGoing
+        if ARGoing then
+            for _, scene in ClientMain.CLIENT.CutsceneHandler.Cutscenes:GetChildren() do
+                scene.Parent = CutFolder
+            end
+            Library:Notify("Auto rooms started")
+
+
+
+ARCon = RunService.Stepped:Connect(function()
+    local Character = Players.LocalPlayer.Character
+    local RoomNumbers = {}
+
+    for _, Room in Rooms:GetChildren() do
+        CollectionService:RemoveTag(Room, "DarkRoom")
+
+        local Number = Room.Name:gsub("Room", "")
+        table.insert(RoomNumbers, tonumber(Number))
+    end
+
+    local LastRoom = math.max(unpack(RoomNumbers)) - 1
+    local foundRoom = Rooms:FindFirstChild("Room" .. tostring(LastRoom + 1))
+   
+    if not table.find(DoggedRooms, foundRoom) then
+        table.insert(DoggedRooms, foundRoom)
+        if ARGoing and Options.RMUnify.Value == "Current Room" then
+            Library:Notify("Auto Rooms: Room " .. foundRoom.Name:split("Room")[2])
+        end
+        if ARGoing and Options.RMUnify.Value == "Special Room" and foundRoom:GetAttribute("Chance") == 0 then
+            Library:Notify("Auto Rooms: Special room '" .. foundRoom:GetAttribute("RawName") .. "' reached")
+        end
+    end
+    if not Character then return end
+
+    for _, Room in Rooms:GetChildren() do
+        if Room.Name == "Room195" then
+            RepStorage.Events.TheObservatory.BeatPuzzle:FireServer()
+        end
+        
+
+        local Door = Room:FindFirstChild("Door") or Room:FindFirstChild("DoorNormal")
+        local Scriptable = Room:FindFirstChild("Scriptable")
+        local Hitbox = (Door and Door:FindFirstChild("Hitbox")) or (Scriptable and Scriptable:FindFirstChild("Trigger"))
+        local Lever = Room:FindFirstChild("CaveLever")
+        local Prompt = Lever and Lever.ProximityPrompt
+        local Elevator = Scriptable and Scriptable:FindFirstChild("Elevator")
+        local ElevatorControl = Elevator and Elevator:FindFirstChild("Control")
+        local ElevatorPrompt = ElevatorControl and ElevatorControl.Button.ProximityPrompt
+
+   
+        if LastRoom ==Options.ARRoomReach.Value - 1 then
+            FiredPrompts = {}
+            DoggedRooms = {}
+            ARCon = ARCon and ARCon:Disconnect()
+            ARGoing = false
+            Library:Notify("Auto rooms done")
+            task.wait(0.5)
+            RepStorage.Events.VoidEvent:FireServer()
+        end
+
+        if not ARCon then break end
+
+        if Prompt and not FiredPrompts[Prompt] then
+            while Prompt.Enabled do
+                Character:PivotTo(Lever:GetPivot())
+                fireproximityprompt(Prompt)
+                FiredPrompts[Prompt] = true
+                task.wait()
+            end
+        end
+
+        if not Hitbox then continue end
+
+        local _LastRoom = Rooms:FindFirstChild(`Room{LastRoom}`)
+        local _CFrame = _LastRoom:GetPivot() * CFrame.new(0, 150, 0)
+        Character:PivotTo(_CFrame)
+
+        Hitbox.CFrame = _CFrame
+        Hitbox.Size = Vector3.new(2048, 2048, 2048)
+    end
+end)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        else
+            for _, scene in CutFolder:GetChildren() do
+                scene.Parent = ClientMain.CLIENT.CutsceneHandler.Cutscenes
+            end
+            Library:Notify("Auto rooms stopped")
+            FiredPrompts = {}
+            DoggedRooms = {}
+            ARCon = ARCon and ARCon:Disconnect()
+            ARGoing = false
+            RepStorage.Events.VoidEvent:FireServer()
+        end
+	end,
+
+	Disabled = false,
+	Visible = true,
+})
+
+RightGroupBox:AddDropdown("RMUnify", {
+	Values = { "Current Room", "Special Room"},
+	Default = 1, 
+	Multi = false, 
+
+	Text = "Notifications",
+
+	Searchable = false, 
+
+	Disabled = false, 
+	Visible = true, 
+})
+
 
 local LeftGroupBox = Tabs.Visuals:AddLeftGroupbox("<b>General</b>")
 LeftGroupBox:AddToggle("Fullbright", {
@@ -520,6 +743,74 @@ for _, Entity in NotifyEntities do
 	    end,
     })
 end
+
+
+
+
+local LeftGroupBox = Tabs.Exploits:AddRightGroupbox("<b>Anti-Trigger</b>")
+local AntiTrigger = {"Seek-Chase-Start", "Seek-Chase-Planks-Fall", "Seek-Chase-Obstruction", "Seek-Chase-Boat-Start", "Death-Trigger", "Seek-Last-Room-Start","Prison-Start", "Watcher-Chase-Start","Observatory-Door"}
+local AntiTriggerInternal = {}
+
+local function processTrigger(trigger)
+    if trigger.Name == "Trigger" and trigger:FindFirstChild("Chase") then
+        trigger.CanTouch = not AntiTriggerInternal["Seek-Chase-Start"]
+    end
+    if trigger.Name == "Hitbox" and trigger.Parent:FindFirstChild("Planks") then
+        trigger.CanTouch = not AntiTriggerInternal["Seek-Chase-Planks-Fall"]
+    end
+    if trigger.Name == "EndSequenceHitbox" then
+        trigger.CanTouch = not AntiTriggerInternal["Seek-Last-Room-Start"]
+    end
+    if trigger.Name == "DeathPit" then
+        trigger.CanTouch = not AntiTriggerInternal["Death-Trigger"]
+    end
+    if trigger.Name == "Hitbox" and trigger.Parent:FindFirstChild("AnimatedShelf") then
+        trigger.CanTouch = not AntiTriggerInternal["Watcher-Chase-Start"]
+    end
+    if trigger.Name == "DoorTrigger" and trigger.Parent:FindFirstChild("BigDoor") then
+        trigger.CanTouch = not AntiTriggerInternal["Observatory-Door"]
+    end
+    if trigger.Name == "StartCutscene" and trigger.Parent:FindFirstChild("PivotWatcherCutscene") and trigger.Parent.Name:FindFirstChild("GuidingLight") then
+        trigger.CanTouch = not AntiTriggerInternal["Prison-Start"]
+    end
+    if trigger.Name == "Cube" and trigger.Parent.Name == "Piper" then
+        trigger.CanTouch = not AntiTriggerInternal["Death-Trigger"]
+    end
+    if trigger.Name == "Trigger" and trigger.Parent:FindFirstChild("ObstructionHolder") then
+        trigger.CanTouch = not AntiTriggerInternal["Seek-Chase-Obstruction"]
+    end
+    if trigger.Name == "Trigger" and trigger.Parent:FindFirstChild("2ndPivot") and trigger.Parent:FindFirstChild("Cutscene") then
+        trigger.CanTouch = not AntiTriggerInternal["Seek-Chase-Boat-Start"]
+    end
+end
+
+for _, Trigger in AntiTrigger do
+    AntiTriggerInternal[Trigger] = false
+    LeftGroupBox:AddToggle("Anti" .. Trigger, {
+	    Text = "Anti-" .. Trigger,
+
+	    Default = false,
+	    Disabled = false, 
+	    Visible = true, 
+
+	    Callback = function(Value)
+		   AntiTriggerInternal[Trigger] = Value
+           for _, object in workspace:GetDescendants() do
+                processTrigger(object)
+           end
+	    end,
+    })
+end
+
+workspace.DescendantAdded:Connect(function(object)
+    processTrigger(object)
+end)
+
+
+
+
+
+
 local LeftGroupBox = Tabs.Visuals:AddLeftGroupbox("<b>ESP</b>")
 local ESPTracersEnabled: boolean = true
 LeftGroupBox:AddToggle("ESPTracers", {
@@ -630,8 +921,8 @@ task.spawn(function()
     end
 end)
 local RightGroupBox = Tabs.Exploits:AddRightGroupbox("<b>Anti-Entity</b>")
-local AntiEntity = {"Blacklight", "Screech", "Void", "Seek-Locker", "Figure-Hearing"}
-local AntiEntityInternal = {}
+local AntiEntity = {"Blacklight", "Screech", "Void", "Decoy", "Seek"}
+
 for _, Entity in AntiEntity do
     AntiEntityInternal[Entity] = false
     RightGroupBox:AddToggle("Anti" .. Entity, {
@@ -645,10 +936,29 @@ for _, Entity in AntiEntity do
             if Entity == "Screech" and Value == false and ClientMain then
                 ClientMain.CLIENT.Values.ScreechActive.Value = false
             end
-            if Entity == "Seek-Locker" and Value == false then
+            if Entity == "Decoy" and Value == false then
                 for _, Obj in workspace:GetDescendants() do
                     if Obj.Name == "AttackRange" then
                         Obj.CanTouch = true
+                    end
+                end
+            elseif Entity == "Decoy" and Value then
+                for _, Obj in workspace:GetDescendants() do
+                    if Obj.Name == "AttackRange" then
+                        Obj.CanTouch = false
+                    end
+                end
+            end
+            if Entity == "Seek" and Value == false then
+                for _, Obj in workspace:GetDescendants() do
+                    if Obj.Name == "Hitbox" and Obj.Parent.Name == "Seek" then
+                        Obj.CanTouch = true
+                    end
+                end
+            elseif Entity == "Seek" and Value then
+                for _, Obj in workspace:GetDescendants() do
+                    if Obj.Name == "Hitbox" and Obj.Parent.Name == "Seek" then
+                        Obj.CanTouch = false
                     end
                 end
             end
@@ -660,7 +970,10 @@ end
 
 
 workspace.DescendantAdded:Connect(function(Obj)
-    if Obj.Name == "AttackRange" and AntiEntityInternal["Seek-Locker"] then
+    if Obj.Name == "AttackRange" and AntiEntityInternal["Decoy"] then
+        Obj.CanTouch = false
+    end
+    if Obj.Name == "Hitbox" and Obj.Parent.Name == "Seek" and AntiEntityInternal["Seek"] then
         Obj.CanTouch = false
     end
 end)
@@ -776,6 +1089,20 @@ MenuGroup:AddDropdown("DPIDropdown", {
 		Library:SetDPIScale(DPI)
 	end,
 })
+MenuGroup:AddButton("Unload", function()
+	Library:Unload()
+end)
+
+Library:OnUnload(function()
+    ARCon = ARCon and ARCon:Disconnect()
+    Toggles["FP"]:SetValue(true)
+    Toggles["FP"]:SetValue(false)
+    for _, toggle in Toggles do
+        toggle:SetValue(false)
+    end
+end)
+
+
 MenuGroup:AddDivider()
 MenuGroup:AddLabel("Menu bind")
 	:AddKeyPicker("MenuKeybind", { Default = "RightShift", NoUI = true, Text = "Menu keybind" })
@@ -851,7 +1178,7 @@ local function processRoom(room)
                 if object.Name == 'Locker' or object.Name == 'Toolshed_Hiding' then
                     table.insert(roomSpecESPs, addESP(object, 'Hiding-Spot', 'HidingSpots'))
                 elseif object.Name == 'decoyLocker' then
-                    table.insert(roomSpecESPs, addESP(object, 'Seek-Locker', 'Entity'))
+                    table.insert(roomSpecESPs, addESP(object, 'Decoy', 'Entity'))
                 end
             end
 
@@ -907,6 +1234,8 @@ end
 
 local function doProcVal(object)
     local foundRoom = object.Value
+    
+    
     if foundRoom then
         for _, ESP in roomSpecESPs do
             ESP:Hide()
@@ -914,6 +1243,7 @@ local function doProcVal(object)
         table.clear(roomSpecESPs)
         processRoom(foundRoom)
     end
+    
 end
 
 local function processLocalPlayerDescendant(object)
