@@ -568,6 +568,9 @@ ARCon = RunService.Stepped:Connect(function()
             DoggedRooms = {}
             ARCon = ARCon and ARCon:Disconnect()
             ARGoing = false
+	for _, scene in CutFolder:GetChildren() do
+                scene.Parent = ClientMain.CLIENT.CutsceneHandler.Cutscenes
+            end
             Library:Notify("Auto rooms done")
             task.wait(0.5)
             RepStorage.Events.VoidEvent:FireServer()
