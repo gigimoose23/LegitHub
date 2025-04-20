@@ -773,7 +773,7 @@ local function processTrigger(trigger)
     if trigger.Name == "DoorTrigger" and trigger.Parent:FindFirstChild("BigDoor") then
         trigger.CanTouch = not AntiTriggerInternal["Observatory-Door"]
     end
-    if trigger.Name == "StartCutscene" and trigger.Parent:FindFirstChild("PivotWatcherCutscene") and trigger.Parent.Name:FindFirstChild("GuidingLight") then
+    if trigger.Name == "StartCutscene" and trigger.Parent:FindFirstChild("PivotWatcherCutscene") and trigger.Parent:FindFirstChild("GuidingLight") then
         trigger.CanTouch = not AntiTriggerInternal["Prison-Start"]
     end
     if trigger.Name == "Cube" and trigger.Parent.Name == "Piper" then
@@ -856,6 +856,20 @@ LeftGroupBox:AddButton({
 	Disabled = false,
 	Visible = true,
 })
+LeftGroupBox:AddButton({
+	Text = "Enable Observatory Lever",
+	Func = function()
+        if ClientMain and ClientMain.CLIENT.Values.CurrentRoom.Value.Name == "Room194" then
+            ClientMain.CLIENT.Values.CurrentRoom.Value:FindFirstChild("CaveLever", true).ProximityPrompt.Enabled = true
+        else
+            Library:Notify("You must be in the observatory!")
+        end
+	end,
+
+	Disabled = false,
+	Visible = true,
+})
+
 
 local PartialGod = false
 LeftGroupBox:AddToggle("PartialGod", {
