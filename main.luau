@@ -664,6 +664,7 @@ LeftGroupBox:AddToggle("Fullbright", {
         end
 	end,
 })
+local noFog = false
 LeftGroupBox:AddToggle("NoFog", {
 	Text = "No-Fog",
 
@@ -673,12 +674,24 @@ LeftGroupBox:AddToggle("NoFog", {
 
 	Callback = function(Value)
 		if Value == true then
+		noFog = true
             Lighting.Atmosphere.Density = 0
         elseif Value == false then
+		noFog = false
             Lighting.Atmosphere.Density = 0.6
         end
 	end,
 })
+
+task.spawn(function()
+	while wait() do
+		if noFog then
+			 Lighting.Atmosphere.Density = 0
+		else
+			 Lighting.Atmosphere.Density = 0.6
+		end
+	end
+end)
 
 LeftGroupBox:AddToggle("FP", {
 	Text = "Third Person",
@@ -862,7 +875,7 @@ LeftGroupBox:AddButton({
         if ClientMain and ClientMain.CLIENT.Values.CurrentRoom.Value and ClientMain.CLIENT.Values.CurrentRoom.Value.Name:find("Room") then
             local Room = ClientMain.CLIENT.Values.CurrentRoom.Value
 	    if Room:FindFirstChild("Door") and Room.Door:FindFirstChild("Hitbox") then
-		firetouchinterest(Players.LocalPlayer.Character.HumanoidRootPart, Room.Door.Hitbox)
+		firetouchinterest(Players.LocalPlayer.Character.HumanoidRootPart, Room.Door.Hitbox, 0)
 	    end
         else
             Library:Notify("You are not in a room!")
