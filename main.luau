@@ -857,6 +857,22 @@ LeftGroupBox:AddButton({
 	Visible = true,
 })
 LeftGroupBox:AddButton({
+	Text = "Open Current Room Door",
+	Func = function()
+        if ClientMain and ClientMain.CLIENT.Values.CurrentRoom.Value and ClientMain.CLIENT.Values.CurrentRoom.Value.Name:find("Room") then
+            local Room = ClientMain.CLIENT.Values.CurrentRoom.Value
+	    if Room:FindFirstChild("Door") and Room.Door:FindFirstChild("Hitbox") then
+		firetouchinterest(Players.LocalPlayer.Character.HumanoidRootPart, Room.Door.Hitbox)
+	    end
+        else
+            Library:Notify("You are not in a room!")
+        end
+	end,
+
+	Disabled = false,
+	Visible = true,
+})
+LeftGroupBox:AddButton({
 	Text = "Enable Observatory Lever",
 	Func = function()
         if ClientMain and ClientMain.CLIENT.Values.CurrentRoom.Value.Name == "Room194" then
