@@ -1,4 +1,7 @@
 local Repo = "https://raw.githubusercontent.com/deividcomsono/Obsidian/main/"
+if not firetouchinterest or not hookfunction or not fireproximityprompt then
+    game:GetService("Players").LocalPlayer:Kick("So sorry, your executor is not supported ):")
+end
 local Library = loadstring(game:HttpGet(Repo .. "Library.lua"))()
 local SaveManager = loadstring(game:HttpGet(Repo .. "addons/SaveManager.lua"))()
 local ThemeManager = loadstring(game:HttpGet(Repo .. "addons/ThemeManager.lua"))()
@@ -22,6 +25,7 @@ local espCategories = {
     HidingSpots = false,
     Doors = false,
     Coins = false,
+    Containers = false,
 }
 local LocalPlayer = Players.LocalPlayer
 local mouse = LocalPlayer:GetMouse()
@@ -249,6 +253,60 @@ LeftGroupBox:AddToggle("Fly", {
     Text = "Fly",
     SyncToggleState = true
 })
+local dai_enabled = false
+
+local function toggle_proximity_connections(enabled)
+    for _, prompt in workspace.GeneratedRooms:GetDescendants() do
+        if prompt:IsA("ProximityPrompt") then
+            for _, con in getconnections(prompt.Triggered) do
+                if enabled then
+                    con:Enable()
+                else
+                    con:Disable()
+                end
+            end
+        end
+    end
+end
+
+--[[LeftGroupBox:AddToggle("AI", {
+    Text = "Auto Interact",
+    Default = false,
+    Callback = function(value)
+        dai_enabled = value
+        toggle_proximity_connections(not value)
+    end,
+}):AddKeyPicker("AIKey", {
+    Mode = "Toggle",
+    Default = "R",
+    Text = "Auto Interact",
+    SyncToggleState = true
+})]]
+local player = Players.LocalPlayer
+task.spawn(function()
+    while task.wait(0.1) do
+        if dai_enabled then
+           
+                local hrp = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
+                if not hrp then return end
+
+                for _, prompt in workspace.GeneratedRooms:GetDescendants() do
+                    if prompt:IsA("ProximityPrompt") and prompt:IsDescendantOf(workspace.GeneratedRooms) then
+                        local prompt_pos = prompt.Parent:IsA("Model") and prompt.Parent:GetPivot().Position or prompt.Parent.Position
+                        if not (prompt:FindFirstAncestor("Toolshed_Hiding") or
+                                prompt:FindFirstAncestor("Locker") or
+                                prompt:FindFirstAncestor("OpenedSTORAGE") or
+                                (prompt.Parent.Parent and prompt.Parent.Parent:FindFirstChild("OpenedSTORAGE"))) and
+                                (prompt_pos - hrp.Position).Magnitude < prompt.MaxActivationDistance then
+                            fireproximityprompt(prompt)
+                        end
+                    end
+                end
+           
+
+        end
+    end
+end)
 local JumpTog =LeftGroupBox:AddToggle("Jump", {
 	Text = "Allow Jumping",
 
@@ -418,6 +476,11 @@ LeftGroupBox:AddToggle("InstantInteract", {
 })
 
 workspace.DescendantAdded:Connect(function(Prompt)
+    if Prompt:GetAttribute("Open") ~= nil and Prompt.Name ~= "Door" then
+        Prompt:GetAttributeChangedSignal("Open"):Once(function()
+            Prompt.Name = "OpenedSTORAGE"
+        end)
+    end
     if Prompt:IsA("ProximityPrompt") and InstaRact then
         Prompt:SetAttribute("OrigHold", Prompt.HoldDuration)
         Prompt.HoldDuration = 0
@@ -840,7 +903,7 @@ LeftGroupBox:AddToggle("ESPTracers", {
 		ESPTracersEnabled = Value
 	end,
 })
-local ESPThings = {"Entity", "Objectives", "Doors", "HidingSpots", "Coins"}
+local ESPThings = {"Entity", "Objectives", "Doors", "HidingSpots", "Coins", "Containers"}
 for _, Thing in ESPThings do
     LeftGroupBox:AddToggle("ESP" .. Thing, {
 	    Text = "ESP " .. Thing,
@@ -1186,6 +1249,7 @@ local colors = {
     HidingSpots = BrickColor.new('Gray').Color,
     Doors = Color3.fromRGB(0, 0, 150),
     Coins = Color3.new(0.898039, 0.913725, 0.000000),
+    Containers = BrickColor.new('Gray').Color,
 }
 
 local function addESP(part, name, category)
@@ -1241,6 +1305,9 @@ local function processRoom(room)
                     table.insert(roomSpecESPs, addESP(object, 'Fuse', 'Objectives'))
                 elseif object.Name == 'GivingCoins' then
                     table.insert(roomSpecESPs, addESP(object.Parent, 'Coins', 'Coins'))
+                elseif object.Name == 'Container' and not object.Parent:HasTag("ContainerMarked") then
+                    object.Parent:AddTag("ContainerMarked")
+                    table.insert(roomSpecESPs, addESP(object.Parent, 'Container', 'Containers'))
                 elseif object.Name == 'Minigame' and object:FindFirstChild('Switches') then
                     table.insert(roomSpecESPs, addESP(object, 'Breaker Minigame', 'Objectives'))
                 elseif object.Name == 'ObservatoryKey' then
