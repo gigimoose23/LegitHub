@@ -978,7 +978,7 @@ LeftGroupBox:AddButton({
 	Func = function()
         if SIP and SIP.Character and SIP.Character:FindFirstChildWhichIsA("Tool") then
 		expectingDrop = true
-		Events.PlayerActions.DropItem:InvokeServer( SIP.Character:FindFirstChildWhichIsA("Tool"))
+		RepStorage.Events.PlayerActions.DropItem:InvokeServer( SIP.Character:FindFirstChildWhichIsA("Tool"))
 	
 	else
 Library:Notify("Failed to steal!")
