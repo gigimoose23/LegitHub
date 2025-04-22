@@ -978,6 +978,7 @@ LeftGroupBox:AddButton({
 	Func = function()
         if SIP and SIP.Character and SIP.Character:FindFirstChildWhichIsA("Tool") then
 		expectingDrop = true
+		print("RE")
 		RepStorage.Events.PlayerActions.DropItem:InvokeServer( SIP.Character:FindFirstChildWhichIsA("Tool"))
 	
 	else
