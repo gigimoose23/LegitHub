@@ -1372,7 +1372,7 @@ local function processRoom(room)
                     table.insert(roomSpecESPs, addESP(object, 'Generator', 'Objectives'))
                 elseif object.Name == 'Terminal' then
                     table.insert(roomSpecESPs, addESP(object, 'Terminal', 'Objectives'))
-                elseif object.Name == 'Switch' and not object:FindFirstAncestor('Switch') then
+                elseif object.Name == 'Switch' and not object:FindFirstAncestor('Switch') and not object:FindFirstAncestor('Flashlight') then
                     table.insert(roomSpecESPs, addESP(object, 'Fuse', 'Objectives'))
                 elseif object.Name == 'GivingCoins' then
                     table.insert(roomSpecESPs, addESP(object.Parent, 'Coins', 'Coins'))
