@@ -961,7 +961,18 @@ LeftGroupBox:AddButton({
 	Disabled = false,
 	Visible = true,
 })
+local PartialGod = false
+LeftGroupBox:AddToggle("PartialGod", {
+	Text = "Infinite Healing",
 
+	Default = false,
+	Disabled = false, 
+	Visible = true, 
+
+	Callback = function(Value)
+		PartialGod = Value
+	end,
+})
 local SIP
 LeftGroupBox:AddDropdown("StealItemsPicker", {
 	SpecialType = "Player",
@@ -991,23 +1002,13 @@ end
 })
 workspace.DroppedItems.ChildAdded:Connect(function(item)
 	if not expectingDrop then return end
+    task.wait(0.5)
 	fireproximityprompt(item:FindFirstChild("Pickup", true))
 	Library:Notify("Stole item!")
 	expectingDrop = false
 end)
 
-local PartialGod = false
-LeftGroupBox:AddToggle("PartialGod", {
-	Text = "Infinite Healing",
 
-	Default = false,
-	Disabled = false, 
-	Visible = true, 
-
-	Callback = function(Value)
-		PartialGod = Value
-	end,
-})
 local AutoCage = false
 local DoConLoop = false
 LeftGroupBox:AddToggle("AutoCage", {
