@@ -962,6 +962,35 @@ LeftGroupBox:AddButton({
 	Visible = true,
 })
 
+local SIP
+LeftGroupBox:AddDropdown("StealItemsPicker", {
+	SpecialType = "Player",
+	ExcludeLocalPlayer = true, 
+	Text = "Steal Item Target",
+
+	Callback = function(Value)
+		SIP = Value
+	end,
+})
+local expectingDrop = false
+LeftGroupBox:AddButton({
+	Text = "Steal target's equipped item",
+	Func = function()
+        if SIP and SIP.Character and SIP.Character:FindFirstChildWhichIsA("Tool") then
+		expectingDrop = true
+		Events.PlayerActions.DropItem:InvokeServer( SIP.Character:FindFirstChildWhichIsA("Tool"))
+	
+	end
+	end,
+
+	Disabled = false,
+	Visible = true,
+})
+workspace.DroppedItems.ChildAdded:Connect(function(item)
+	if not expectingDrop then return
+	fireproximityprompt(item:FindFirstChild("Pickup", true))
+	expectingDrop = false
+end)
 
 local PartialGod = false
 LeftGroupBox:AddToggle("PartialGod", {
