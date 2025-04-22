@@ -980,15 +980,18 @@ LeftGroupBox:AddButton({
 		expectingDrop = true
 		Events.PlayerActions.DropItem:InvokeServer( SIP.Character:FindFirstChildWhichIsA("Tool"))
 	
-	end
+	else
+Library:Notify("Failed to steal!")
+end
 	end,
 
 	Disabled = false,
 	Visible = true,
 })
 workspace.DroppedItems.ChildAdded:Connect(function(item)
-	if not expectingDrop then return
+	if not expectingDrop then return end
 	fireproximityprompt(item:FindFirstChild("Pickup", true))
+	Library:Notify("Stole item!")
 	expectingDrop = false
 end)
 
