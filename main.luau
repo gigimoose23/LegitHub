@@ -932,6 +932,31 @@ LeftGroupBox:AddButton({
 	Disabled = false,
 	Visible = true,
 })
+local function get_latest_room()
+    local rooms_folder = workspace:FindFirstChild("GeneratedRooms")
+    if not rooms_folder then return nil end
+
+    local room_numbers = {}
+
+    for _, child in ipairs(rooms_folder:GetChildren()) do
+        if child:IsA("Model") then
+            local num = tonumber(child.Name:match("Room(%d+)"))
+            if num then
+                table.insert(room_numbers, num)
+            end
+        end
+    end
+
+    table.sort(room_numbers, function(a, b) return a > b end)
+
+    if #room_numbers < 2 then return nil end
+
+    local latest_room_number = room_numbers[2]
+    local latest_room_name = "Room" .. latest_room_number
+
+    return rooms_folder:FindFirstChild(latest_room_name)
+end
+
 LeftGroupBox:AddButton({
 	Text = "Open Current Room Door",
 	Func = function()
@@ -943,6 +968,18 @@ LeftGroupBox:AddButton({
         else
             Library:Notify("You are not in a room!")
         end
+	end,
+
+	Disabled = false,
+	Visible = true,
+})
+LeftGroupBox:AddButton({
+	Text = "Open Latest Room Door",
+	Func = function()
+local Room = get_latest_room()
+        	if Room:FindFirstChild("Door") and Room.Door:FindFirstChild("Hitbox") then
+		Room.Door.Hitbox.CFrame = Players.LocalPlayer.Character.HumanoidRootPart.CFrame
+	    end
 	end,
 
 	Disabled = false,
