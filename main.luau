@@ -223,7 +223,7 @@ local stateLib = true
 repeat wait() until Library and typeof(Library.Toggle) == "function"
 old = hookfunction(Library.Toggle, function()
     stateLib = not stateLib
-
+	Library.ScreenGui.Enabled = stateLib
     old()
 end)
 task.spawn(function()
