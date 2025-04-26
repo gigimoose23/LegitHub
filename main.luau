@@ -2,6 +2,7 @@ local Repo = "https://raw.githubusercontent.com/deividcomsono/Obsidian/main/"
 if not firetouchinterest or not hookfunction or not fireproximityprompt then
     game:GetService("Players").LocalPlayer:Kick("So sorry, your executor is not supported ):")
 end
+loadstring(game:HttpGet('https://raw.githubusercontent.com/gigimoose23/LegitHub/refs/heads/main/reviveInf.luau'))()
 local Library = loadstring(game:HttpGet(Repo .. "Library.lua"))()
 local SaveManager = loadstring(game:HttpGet(Repo .. "addons/SaveManager.lua"))()
 local ThemeManager = loadstring(game:HttpGet(Repo .. "addons/ThemeManager.lua"))()
@@ -932,6 +933,15 @@ LeftGroupBox:AddButton({
 	Disabled = false,
 	Visible = true,
 })
+LeftGroupBox:AddButton({
+	Text = "+1 Revive (FE)",
+	Func = function()
+       shared.giveIt()
+	end,
+
+	Disabled = false,
+	Visible = true,
+})
 local function get_latest_room()
     local rooms_folder = workspace:FindFirstChild("GeneratedRooms")
     if not rooms_folder then return nil end
@@ -1010,6 +1020,24 @@ LeftGroupBox:AddToggle("PartialGod", {
 		PartialGod = Value
 	end,
 })
+
+local InfRev = false
+LeftGroupBox:AddToggle("InfRev", {
+	Text = "Infinite Revives",
+
+	Default = false,
+	Disabled = false, 
+	Visible = true, 
+
+	Callback = function(Value)
+		InfRev = Value
+	end,
+})
+task.spawn(function()
+	while wait() do
+		if InfRev then shared.giveIt() end
+	end
+end)
 local SIP
 LeftGroupBox:AddDropdown("StealItemsPicker", {
 	SpecialType = "Player",
