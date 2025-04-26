@@ -1035,7 +1035,7 @@ LeftGroupBox:AddToggle("InfRev", {
 })
 task.spawn(function()
 	while wait() do
-		if InfRev then shared.giveIt() end
+		if InfRev then task.spawn(shared.giveIt) end
 	end
 end)
 local SIP
@@ -1303,6 +1303,7 @@ end)
 
 Library:OnUnload(function()
     ARCon = ARCon and ARCon:Disconnect()
+    shared.giveIt = nil
     Toggles["FP"]:SetValue(true)
     Toggles["FP"]:SetValue(false)
     for _, toggle in Toggles do
