@@ -219,7 +219,18 @@ local Tabs = {
 	Exploits = Window:AddTab("Exploits", "shield-alert"),
     ["UI Settings"] = Window:AddTab("UI Settings", "settings"),
 }
+local stateLib = true
+repeat wait() until Library and typeof(Library.Toggle) == "function"
+old = hookfunction(Library.Toggle, function()
+    stateLib = not stateLib
 
+    old()
+end)
+task.spawn(function()
+	while wait() do
+getrenv()._G.lockMouse = not stateLib
+end
+end)
 local LeftGroupBox = Tabs.Main:AddLeftGroupbox("<b>LocalPlayer</b>")
 local WSLoopEnabled = false
 local WSLoopVal = 16
