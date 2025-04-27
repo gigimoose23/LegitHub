@@ -221,7 +221,8 @@ local Tabs = {
 }
 local stateLib = true
 repeat wait() until Library and typeof(Library.Toggle) == "function"
-old = hookfunction(Library.Toggle, function()
+if not game:GetService("UserInputService").TouchEnabled then
+	old = hookfunction(Library.Toggle, function()
     stateLib = not stateLib
 	Library.ScreenGui.Enabled = stateLib
     old()
@@ -231,6 +232,8 @@ task.spawn(function()
 getrenv()._G.lockMouse = not stateLib
 end
 end)
+end
+
 local LeftGroupBox = Tabs.Main:AddLeftGroupbox("<b>LocalPlayer</b>")
 local WSLoopEnabled = false
 local WSLoopVal = 16
