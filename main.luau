@@ -225,13 +225,14 @@ if not game:GetService("UserInputService").TouchEnabled then
 	old = hookfunction(Library.Toggle, function()
     stateLib = not stateLib
 	Library.ScreenGui.Enabled = stateLib
-    old()
-end)
-task.spawn(function()
+	task.spawn(function()
 	while wait() do
 getrenv()._G.lockMouse = not stateLib
 end
 end)
+    old()
+end)
+
 end
 
 local LeftGroupBox = Tabs.Main:AddLeftGroupbox("<b>LocalPlayer</b>")
